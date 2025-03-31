@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Difference Equation Solver</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            cursor: pointer;
+        }
+        .chart-container {
+            display: inline-block;
+            width: 45%;
+            margin: 10px;
+            background-color: white;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+        footer {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #222;
+            color: white;
+            text-align: center;
+        }
+    </style>
+    <script>
+        function solveDifferenceEquation() {
+            let b = document.getElementById("b").value.split(',').map(Number);
+            let a = document.getElementById("a").value.split(',').map(Number);
+            let xinput = document.getElementById("xinput").value.split(',').map(Number);
+            let L = parseInt(document.getElementById("L").value);
+            let IC = document.getElementById("IC").value.split(',').map(Number);
+            
+            let M = b.length - 1;
+            let N = a.length - 1;
+            let n = [...Array(L + N + 1).keys()].map(i => i - N);
+            let xin = xinput.concat(Array(L + 1 - xinput.length).fill(0));
+            let x = Array(N).fill(0).concat(xin);
+            let y = IC.concat(Array(L + 1).fill(0));
+            
+            for (let q = N; q <= L; q++) {
+                let sumx = 0, sumy = 0;
+                for (let k = 0; k <= M; k++) {
+                    sumx += b[k] * (x[q - k] || 0);
+                }
+                for (let k = 1; k <= N; k++) {
+                    sumy += a[k] * (y[q - k] || 0);
+                }
+                y[q] = sumx - sumy;
+            }
+            
+            document.getElementById("output").innerText = "Output y[n]: " + y.join(', ');
+            drawStemChart(n, x, "inputChart", "Input Sequence x[n]", "blue");
+            drawStemChart(n, y, "outputChart", "Output Sequence y[n]", "red");
+            drawStemChart(n, [1].concat(Array(L).fill(0)), "impulseInputChart", "Impulse Input x[n]", "green");
+            drawStemChart(n, y, "impulseOutputChart", "Impulse Response h[n]", "purple");
+        }
+
+        function drawStemChart(n, data, canvasId, title, color) {
+            let ctx = document.getElementById(canvasId).getContext('2d');
+            let chartData = n.map((val, idx) => ({x: val, y: data[idx] || 0}));
+
+            new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: title,
+                        data: chartData,
+                        borderColor: color,
+                        borderWidth: 2,
+                        showLine: false,
+                        pointRadius: 5,
+                        pointBackgroundColor: color
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: { type: 'linear', position: 'bottom' },
+                        y: { beginAtZero: true }
+                    },
+                    elements: {
+                        line: {
+                            tension: 0
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+    <h2>Difference Equation Solver</h2>
+    <label>Enter coefficients of x (comma separated):</label>
+    <input type="text" id="b"><br>
+    <label>Enter coefficients of y (comma separated):</label>
+    <input type="text" id="a"><br>
+    <label>Enter input x (comma separated):</label>
+    <input type="text" id="xinput"><br>
+    <label>Enter number of samples for y:</label>
+    <input type="number" id="L"><br>
+    <label>Enter initial conditions for y (comma separated):</label>
+    <input type="text" id="IC"><br>
+    <button onclick="solveDifferenceEquation()">Solve</button>
+    <p id="output"></p>
+    
+    <div class="chart-container">
+        <canvas id="inputChart" width="400" height="200"></canvas>
+    </div>
+    <div class="chart-container">
+        <canvas id="outputChart" width="400" height="200"></canvas>
+    </div>
+    <div class="chart-container">
+        <canvas id="impulseInputChart" width="400" height="200"></canvas>
+    </div>
+    <div class="chart-container">
+        <canvas id="impulseOutputChart" width="400" height="200"></canvas>
+    </div>
+
+    <footer>
+        Created by MR and MV
+    </footer>
+</body>
+</html>
